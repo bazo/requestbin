@@ -1,8 +1,29 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import registerServiceWorker from './registerServiceWorker';
+import { Provider } from 'react-redux';
+import App from './components/app';
+import {persistor, store} from './createStore';
+import { PersistGate } from 'redux-persist/lib/integration/react';
 
-ReactDOM.render(<App />, document.getElementById('root'));
-registerServiceWorker();
+//import 'bootstrap/dist/css/bootstrap.css';
+//import './App.css';
+import 'react-datetime/css/react-datetime.css';
+
+const render = Component => {
+	ReactDOM.render(
+        <PersistGate persistor={persistor}>
+		<Provider store={store}>
+			<Component />
+		</Provider>
+        </PersistGate>,
+		document.getElementById('root')
+	);
+};
+
+render(App);
+
+if (module.hot) {
+	module.hot.accept('./components/app', () => {
+		render(App);
+	});
+}

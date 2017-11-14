@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/jinzhu/configor"
 	"github.com/julienschmidt/httprouter"
+	"github.com/speps/go-hashids"
 )
 
 type (
@@ -44,9 +46,29 @@ type (
 		RequestURI       string
 		TLS              *tls.ConnectionState
 	}
+
+	Bin struct {
+		ID     int
+		HashId string
+	}
 )
 
 var config Config
+
+func itob(v int) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
+}
+
+func hashId(v int) string {
+	hd := hashids.NewData()
+	hd.Salt = "WLIXFjh8d3foEoKxqjif"
+	hd.MinLength = 5
+	h := hashids.NewWithData(hd)
+	id, _ := h.Encode([]int{v})
+	return id
+}
 
 func loadConfig() {
 	configFile := flag.String("file", "config.yml", "configuration file")
@@ -91,12 +113,77 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(req)
 }
 
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "Welcome!\n")
+/*
+func dbHandler(handler func(w http.ResponseWriter, r *http.Request, params httprouter.Params, db *bolt.DB)) func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		handler(w, r, params, db)
+	}
+}
+*/
+
+func createBinHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params, db *bolt.DB) {
+	bin, _ := createBin(db)
+
+	json.NewEncoder(w).Encode(bin)
 }
 
-func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
+func loadBinsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params, db *bolt.DB) {
+
+	var bins []*Bin
+
+	db.View(func(tx *bolt.Tx) error {
+		// Assume bucket exists and has keys
+		b := tx.Bucket([]byte("bins"))
+
+		b.ForEach(func(k, v []byte) error {
+			bin := &Bin{}
+			json.Unmarshal(v, bin)
+			bins = append(bins, bin)
+			return nil
+		})
+		return nil
+	})
+
+	json.NewEncoder(w).Encode(bins)
+}
+
+func binMiddleware(handler http.Handler, db *bolt.DB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/tom" {
+			// do something for tom
+		}
+		handler.ServeHTTP(w, r)
+	})
+}
+
+func createBin(db *bolt.DB) (*Bin, error) {
+
+	bin := &Bin{}
+
+	err := db.Update(func(tx *bolt.Tx) error {
+		// Retrieve the users bucket.
+		// This should be created when the DB is first opened.
+		b := tx.Bucket([]byte("bins"))
+
+		// Generate ID for the user.
+		// This returns an error only if the Tx is closed or not writeable.
+		// That can't happen in an Update() call so I ignore the error check.
+		id, _ := b.NextSequence()
+
+		bin.ID = int(id)
+		bin.HashId = hashId(int(id))
+
+		// Marshal user data into bytes.
+		buf, err := json.Marshal(bin)
+		if err != nil {
+			return err
+		}
+
+		// Persist bytes to users bucket.
+		return b.Put(itob(bin.ID), buf)
+	})
+
+	return bin, err
 }
 
 func main() {
@@ -116,16 +203,18 @@ func main() {
 		return nil
 	})
 
-	/*
-		dbHandler := func(handler func(w http.ResponseWriter, r *http.Request, db *mgo.Database)) func(w http.ResponseWriter, r *http.Request) {
-			return func(w http.ResponseWriter, r *http.Request) {
-				handler(w, r, db)
-			}
+	dbHandler := func(handler func(w http.ResponseWriter, r *http.Request, params httprouter.Params, db *bolt.DB)) func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+			handler(w, r, params, db)
 		}
-	*/
+	}
 
 	box := rice.MustFindBox("build")
 	log.Print(box)
+
+	fileHandler := func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		http.FileServer(box.HTTPBox()).ServeHTTP(w, r)
+	}
 
 	//http.HandleFunc("/apps", dbHandler(GetAppsHandler))
 	//http.HandleFunc("/actions", dbHandler(GetActionsHandler))
@@ -137,8 +226,17 @@ func main() {
 	log.Println("starting server on port", config.Port)
 
 	router := httprouter.New()
-	router.GET("/", Index)
-	router.GET("/hello/:name", Hello)
+	//router.GET("/", http.FileServer(box.HTTPBox()))
 
-	log.Fatal(http.ListenAndServe(":"+config.Port, router))
+	router.POST("/api/bins", dbHandler(createBinHandler))
+	router.GET("/api/bins", dbHandler(loadBinsHandler))
+
+	router.GET("/", fileHandler)
+
+	router.HandleMethodNotAllowed = false
+	router.NotFound = func(w http.ResponseWriter, r *http.Request) {
+		http.FileServer(box.HTTPBox()).ServeHTTP(w, r)
+	}
+
+	log.Fatal(http.ListenAndServe(":"+config.Port, binMiddleware(router, db)))
 }

@@ -3,32 +3,34 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "react": "^16.1.0",
-    "react-dom": "^16.1.0",
-    "react-scripts": "1.0.17",
+    "axios": "^0.17.1",
+    "localforage": "^1.5.3",
+    "moment": "^2.19.2",
     "node-less-chokidar": "^0.1.2",
     "node-sass-chokidar": "^0.0.3",
     "npm-run-all": "^4.1.2",
+    "react": "^16.1.1",
+    "react-datetime": "^2.11.0",
+    "react-dom": "^16.1.1",
     "react-json-tree": "^0.11.0",
-		"react-paginate": "^5.0.0",
-		"react-redux": "^5.0.6",
+    "react-paginate": "^5.0.0",
+    "react-redux": "^5.0.6",
     "react-redux-loading-bar": "^2.9.3",
+    "react-scripts": "1.0.17",
     "redux": "^3.7.2",
-		"redux-logger": "^3.0.6",
-		"redux-persist": "^5.3.4",
-    "redux-promise-middleware": "^4.4.2",
-    "moment": "^2.19.1",
-    "localforage": "^1.5.3"
+    "redux-logger": "^3.0.6",
+    "redux-persist": "^5.3.5",
+    "redux-promise-middleware": "^4.4.2"
   },
   "proxy": "http://localhost:8000/",
   "scripts": {
     "build-css": "node-less-chokidar src/ -o src/",
-		"watch-css": "npm run build-css && node-less-chokidar src/ -o src/ --watch --recursive",
+    "watch-css": "npm run build-css && node-less-chokidar src/ -o src/ --watch --recursive",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "start-js": "react-scripts start",
-		"start-server": "realize run",
-		"start": "npm-run-all -p start-server watch-css start-js",
-		"build": "npm run build-css && react-scripts build && rice embed-go"
+    "start-server": "realize run",
+    "start": "npm-run-all -p start-server watch-css start-js",
+    "build": "npm run build-css && react-scripts build && rice embed-go"
   }
 }

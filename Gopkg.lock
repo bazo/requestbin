@@ -44,6 +44,12 @@
   revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
 
 [[projects]]
+  name = "github.com/speps/go-hashids"
+  packages = ["."]
+  revision = "d1d57a886aa7e3ef6092b70ceab077e35ee8e0ce"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
@@ -58,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1f8c1299b5585da87a194b5576d56ffaf0e27036573aa330c3dc4cfa606c78b5"
+  inputs-digest = "4b9c1b0328f2fe1bd80eec7dfeab42b70f8a523781a1a7ac2dfb963fd0dba77f"
   solver-name = "gps-cdcl"
   solver-version = 1
