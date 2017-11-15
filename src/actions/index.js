@@ -40,6 +40,7 @@ export function selectBin(binId) {
 }
 
 export function loadRequests(binId, page = 1, maxPerPage = 50) {
+	console.log(binId)
 	const params = { page, maxPerPage };
 	const request = axios.get(`/api/bins/${binId}/requests`, params);
 

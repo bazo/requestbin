@@ -3,16 +3,16 @@ import React from 'react';
 import LoadingBar from 'react-redux-loading-bar';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { createBin } from '../actions';
+import {  } from '../actions';
 
 import BinList from './binList';
 
 const App = ({ createBin }) => (
 	<div className="row">
-		<aside className="col-lg-2" />
-		<a onClick={createBin}>CREATE BIN</a>
-		<BinList />
-    
+		<aside className="col-lg-2">
+			<BinList />
+		</aside>
+
 		<div className="col-lg-10" id="top">
 			<br />
 			<LoadingBar
@@ -30,7 +30,7 @@ const mapStateToProps = ({ bins }, ownProps) => {
 };
 
 const mapDispatchToProps = dispatch => {
-	return bindActionCreators({ createBin }, dispatch);
+	return bindActionCreators({  }, dispatch);
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -11,12 +12,14 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/GeertJohan/go.rice"
 	"github.com/boltdb/bolt"
 	"github.com/jinzhu/configor"
 	"github.com/julienschmidt/httprouter"
+	"github.com/satori/go.uuid"
 	"github.com/speps/go-hashids"
 )
 
@@ -28,6 +31,7 @@ type (
 	}
 
 	RequestStruct struct {
+		ID               string
 		Method           string
 		URL              *url.URL
 		Proto            string // "HTTP/1.0"
@@ -61,13 +65,31 @@ func itob(v int) []byte {
 	return b
 }
 
-func hashId(v int) string {
+func createIdHasher() *hashids.HashID {
 	hd := hashids.NewData()
 	hd.Salt = "WLIXFjh8d3foEoKxqjif"
 	hd.MinLength = 5
-	h := hashids.NewWithData(hd)
-	id, _ := h.Encode([]int{v})
+	return hashids.NewWithData(hd)
+}
+
+func hashId(v int) string {
+	hd := createIdHasher()
+	id, _ := hd.Encode([]int{v})
 	return id
+}
+
+func decodeHashId(hash string) (int, error) {
+	hd := createIdHasher()
+	d, err := hd.DecodeWithError(hash)
+	if err != nil {
+		return -1, err
+	}
+	log.Println(d)
+	if len(d) != 0 {
+		return d[0], err
+	}
+
+	return -1, errors.New("Hash not decoded")
 }
 
 func loadConfig() {
@@ -75,20 +97,17 @@ func loadConfig() {
 	configor.Load(&config, *configFile)
 }
 
-func requestHandler(w http.ResponseWriter, r *http.Request) {
-
+func encodeRequest(r *http.Request) ([]byte, error) {
 	//if r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
 	r.ParseForm()
 	//}
 
 	log.Println(r)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
 	body, _ := ioutil.ReadAll(r.Body)
 
 	req := &RequestStruct{
+		ID:               uuid.NewV4().String(),
 		Method:           r.Method,
 		URL:              r.URL,
 		Proto:            r.Proto,
@@ -108,18 +127,41 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		TLS:              r.TLS,
 	}
 
-	log.Println(json.Marshal(req))
-
-	json.NewEncoder(w).Encode(req)
+	return json.Marshal(req)
 }
 
-/*
-func dbHandler(handler func(w http.ResponseWriter, r *http.Request, params httprouter.Params, db *bolt.DB)) func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		handler(w, r, params, db)
+func requestHandler(w http.ResponseWriter, r *http.Request, binName string, db *bolt.DB) {
+	var id uint64
+	err := db.Update(func(tx *bolt.Tx) error {
+		bucketId := []byte(binName)
+		_, err := tx.CreateBucketIfNotExists(bucketId)
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
+		}
+
+		b := tx.Bucket(bucketId)
+
+		id, _ = b.NextSequence()
+
+		req, err := encodeRequest(r)
+
+		if err != nil {
+			return err
+		}
+
+		return b.Put(itob(int(id)), req)
+	})
+
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("X-Request-Id", fmt.Sprintf("%d", int(id)))
 	}
+
 }
-*/
 
 func createBinHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params, db *bolt.DB) {
 	bin, _ := createBin(db)
@@ -147,13 +189,77 @@ func loadBinsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	json.NewEncoder(w).Encode(bins)
 }
 
+func loadBinRequestsHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params, db *bolt.DB) {
+
+	binName := params.ByName("binName")
+
+	var requests []*RequestStruct
+
+	db.View(func(tx *bolt.Tx) error {
+		// Assume bucket exists and has keys
+		b := tx.Bucket([]byte(binName))
+
+		log.Println(b)
+
+		b.ForEach(func(k, v []byte) error {
+			log.Println(k, v)
+			req := &RequestStruct{}
+			json.Unmarshal(v, req)
+			requests = append(requests, req)
+			return nil
+		})
+
+		return nil
+	})
+
+	json.NewEncoder(w).Encode(requests)
+}
+
 func binMiddleware(handler http.Handler, db *bolt.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/tom" {
-			// do something for tom
+		binName := strings.TrimPrefix(r.URL.Path, "/")
+		log.Println(binName)
+
+		//binBytes, err := findBin(binName, db)
+		_, err := findBin(binName, db)
+
+		if err == nil {
+			//bin := &Bin{}
+			//json.Unmarshal(binBytes.([]byte), bin)
+			//log.Println(bin)
+			//json.NewEncoder(w).Encode(bin)
+
+			requestHandler(w, r, binName, db)
+		} else {
+			handler.ServeHTTP(w, r)
 		}
-		handler.ServeHTTP(w, r)
 	})
+}
+
+func findBin(binName string, db *bolt.DB) (interface{}, error) {
+	var result []byte
+	id, err := decodeHashId(binName)
+
+	if err != nil {
+		return result, err
+	}
+
+	db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("bins"))
+		v := b.Get(itob(id))
+		fmt.Printf("The answer is: %s\n", v)
+
+		if v != nil {
+			result = make([]byte, len(v))
+			//copy(v, result)
+			result = v
+		} else {
+			result = nil
+		}
+		return nil
+	})
+
+	return result, nil
 }
 
 func createBin(db *bolt.DB) (*Bin, error) {
@@ -216,10 +322,6 @@ func main() {
 		http.FileServer(box.HTTPBox()).ServeHTTP(w, r)
 	}
 
-	//http.HandleFunc("/apps", dbHandler(GetAppsHandler))
-	//http.HandleFunc("/actions", dbHandler(GetActionsHandler))
-	//http.HandleFunc("/logs", dbHandler(GetLogsHandler))
-	http.HandleFunc("/r", requestHandler)
 	http.Handle("/", http.FileServer(box.HTTPBox()))
 	http.Handle("/inspect", http.FileServer(box.HTTPBox()))
 
@@ -230,6 +332,8 @@ func main() {
 
 	router.POST("/api/bins", dbHandler(createBinHandler))
 	router.GET("/api/bins", dbHandler(loadBinsHandler))
+
+	router.GET("/api/bins/:binName/requests", dbHandler(loadBinRequestsHandler))
 
 	router.GET("/", fileHandler)
 

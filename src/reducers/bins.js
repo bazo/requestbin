@@ -1,28 +1,36 @@
 import { REHYDRATE, PURGE } from 'redux-persist';
-import { LOAD_BINS } from '../actions';
+import { CREATE_BIN, LOAD_BINS } from '../actions';
 
 const initialState = {
-    selectedBin: null,
-    bins: [],
-    requests: [],
+	selectedBin: null,
+	bins: [],
+	requests: []
 };
 
 export default function(state = initialState, action) {
 	switch (action.type) {
 		case REHYDRATE: {
-            console.log(action)
-            return state;
+			console.log(action);
+			return state;
 			//return rehydrate(action.payload.bins, initialState);
 		}
 
-		case `${LOAD_BINS}_FULFILLED`: {
-            const data = action.payload.data;
-            console.log(data)
+        case `${CREATE_BIN}_FULFILLED`: {
+			let data = action.payload.data;
 			if (data === null) {
-				return [];
+				return state;
 			}
 
-			return data;
+			return { ...state, ...{ bins: state.bins.concat(data) } };
+		}
+
+		case `${LOAD_BINS}_FULFILLED`: {
+			let data = action.payload.data;
+			if (data === null) {
+				data = [];
+			}
+
+			return { ...state, ...{ bins: data } };
 		}
 
 		default:
