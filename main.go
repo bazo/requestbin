@@ -12,6 +12,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -38,6 +39,7 @@ type (
 		ProtoMajor       int    // 1
 		ProtoMinor       int    // 0
 		Header           http.Header
+		ContentType      string
 		Body             string //io.ReadCloser
 		ContentLength    int64
 		TransferEncoding []string
@@ -49,6 +51,7 @@ type (
 		RemoteAddr       string
 		RequestURI       string
 		TLS              *tls.ConnectionState
+		Time             time.Time
 	}
 
 	Bin struct {
@@ -84,7 +87,6 @@ func decodeHashId(hash string) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	log.Println(d)
 	if len(d) != 0 {
 		return d[0], err
 	}
@@ -102,9 +104,9 @@ func encodeRequest(r *http.Request) ([]byte, error) {
 	r.ParseForm()
 	//}
 
-	log.Println(r)
-
 	body, _ := ioutil.ReadAll(r.Body)
+
+	contentType := r.Header.Get("Content-Type")
 
 	req := &RequestStruct{
 		ID:               uuid.NewV4().String(),
@@ -125,6 +127,8 @@ func encodeRequest(r *http.Request) ([]byte, error) {
 		RemoteAddr:       r.RemoteAddr,
 		RequestURI:       r.RequestURI,
 		TLS:              r.TLS,
+		Time:             time.Now(),
+		ContentType:      contentType,
 	}
 
 	return json.Marshal(req)
@@ -193,16 +197,17 @@ func loadBinRequestsHandler(w http.ResponseWriter, r *http.Request, params httpr
 
 	binName := params.ByName("binName")
 
-	var requests []*RequestStruct
+	requests := make([]*RequestStruct, 0)
 
 	db.View(func(tx *bolt.Tx) error {
 		// Assume bucket exists and has keys
 		b := tx.Bucket([]byte(binName))
 
-		log.Println(b)
+		if b == nil {
+			return nil
+		}
 
 		b.ForEach(func(k, v []byte) error {
-			log.Println(k, v)
 			req := &RequestStruct{}
 			json.Unmarshal(v, req)
 			requests = append(requests, req)
@@ -212,13 +217,16 @@ func loadBinRequestsHandler(w http.ResponseWriter, r *http.Request, params httpr
 		return nil
 	})
 
+	sort.SliceStable(requests, func(i, j int) bool {
+		return requests[j].Time.Before(requests[i].Time)
+	})
+
 	json.NewEncoder(w).Encode(requests)
 }
 
 func binMiddleware(handler http.Handler, db *bolt.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		binName := strings.TrimPrefix(r.URL.Path, "/")
-		log.Println(binName)
 
 		//binBytes, err := findBin(binName, db)
 		_, err := findBin(binName, db)
@@ -316,7 +324,6 @@ func main() {
 	}
 
 	box := rice.MustFindBox("build")
-	log.Print(box)
 
 	fileHandler := func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		http.FileServer(box.HTTPBox()).ServeHTTP(w, r)

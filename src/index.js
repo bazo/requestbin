@@ -6,8 +6,9 @@ import {persistor, store} from './createStore';
 import { PersistGate } from 'redux-persist/lib/integration/react';
 
 //import 'bootstrap/dist/css/bootstrap.css';
-//import './App.css';
+import './App.css';
 import 'react-datetime/css/react-datetime.css';
+import 'font-awesome/css/font-awesome.css';
 
 const render = Component => {
 	ReactDOM.render(

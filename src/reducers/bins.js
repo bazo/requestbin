@@ -1,5 +1,5 @@
-import { REHYDRATE, PURGE } from 'redux-persist';
-import { CREATE_BIN, LOAD_BINS } from '../actions';
+import { REHYDRATE } from 'redux-persist';
+import { CREATE_BIN, LOAD_BINS, LOAD_REQUESTS } from '../actions';
 
 const initialState = {
 	selectedBin: null,
@@ -10,12 +10,22 @@ const initialState = {
 export default function(state = initialState, action) {
 	switch (action.type) {
 		case REHYDRATE: {
-			console.log(action);
-			return state;
-			//return rehydrate(action.payload.bins, initialState);
+			if (action.payload === undefined) {
+				return state;
+			}
+
+			const data = action.payload.bins;
+			return {
+				...state,
+				...{
+					bins: data.bins,
+					selectedBin: data.selectedBin,
+					requests: data.requests
+				}
+			};
 		}
 
-        case `${CREATE_BIN}_FULFILLED`: {
+		case `${CREATE_BIN}_FULFILLED`: {
 			let data = action.payload.data;
 			if (data === null) {
 				return state;
@@ -33,15 +43,19 @@ export default function(state = initialState, action) {
 			return { ...state, ...{ bins: data } };
 		}
 
+		case `${LOAD_REQUESTS}_FULFILLED`: {
+			let data = action.payload.data;
+			if (data === null) {
+				data = [];
+			}
+
+			return {
+				...state,
+				...{ requests: data, selectedBin: action.meta.selectedBin }
+			};
+		}
+
 		default:
 			return state;
 	}
-}
-
-function rehydrate(saved, initialState) {
-	if (saved === undefined) {
-		return initialState;
-	}
-
-	return saved;
 }
