@@ -20,8 +20,6 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/jinzhu/configor"
 	"github.com/julienschmidt/httprouter"
-	"github.com/satori/go.uuid"
-	"github.com/speps/go-hashids"
 )
 
 type (
@@ -95,7 +93,7 @@ func decodeHashId(hash string) (int, error) {
 }
 
 func loadConfig() {
-	configFile := flag.String("file", "config.yml", "configuration file")
+	configFile := flag.String("file", "requestbin.yml", "configuration file")
 	configor.Load(&config, *configFile)
 }
 
