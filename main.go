@@ -20,14 +20,14 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/jinzhu/configor"
 	"github.com/julienschmidt/httprouter"
-	"github.com/satori/go.uuid"
-	"github.com/speps/go-hashids"
+	uuid "github.com/satori/go.uuid"
+	hashids "github.com/speps/go-hashids"
 )
 
 type (
 	//app config
 	Config struct {
-		Port   string `default:"8000"`
+		Port   string `default:"8100"`
 		DbName string `default:"requestbin.bolt"`
 	}
 
