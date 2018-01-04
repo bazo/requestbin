@@ -20,6 +20,8 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/jinzhu/configor"
 	"github.com/julienschmidt/httprouter"
+	"github.com/satori/go.uuid"
+	"github.com/speps/go-hashids"
 )
 
 type (
