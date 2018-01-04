@@ -248,6 +248,10 @@ func findBin(binName string, db *bolt.DB) (interface{}, error) {
 	var result []byte
 	id, err := decodeHashId(binName)
 
+	if strings.HasPrefix(binName, "static") {
+		return result, errors.New("Not a bin")
+	}
+
 	if err != nil {
 		return result, err
 	}
