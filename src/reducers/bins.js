@@ -1,13 +1,14 @@
 import { REHYDRATE } from 'redux-persist';
-import { CREATE_BIN, LOAD_BINS, LOAD_REQUESTS } from '../actions';
+import { CREATE_BIN, LOAD_BINS, LOAD_REQUESTS, EXPAND_ALL, COLLAPSE_ALL } from '../actions';
 
 const initialState = {
 	selectedBin: null,
 	bins: [],
-	requests: []
+	requests: [],
+	expandAll: false
 };
 
-export default function(state = initialState, action) {
+export default function (state = initialState, action) {
 	switch (action.type) {
 		case REHYDRATE: {
 			if (action.payload === undefined) {
@@ -52,6 +53,20 @@ export default function(state = initialState, action) {
 			return {
 				...state,
 				...{ requests: data, selectedBin: action.meta.selectedBin }
+			};
+		}
+
+		case EXPAND_ALL: {
+			return {
+				...state,
+				...{ expandAll: true }
+			};
+		}
+
+		case COLLAPSE_ALL: {
+			return {
+				...state,
+				...{ expandAll: false }
 			};
 		}
 

@@ -56,7 +56,7 @@ function getContentType(request) {
 	return 'text/plain';
 }
 
-const RequestsList = ({ requests }) => (
+const RequestsList = ({ requests, expandAll }) => (
 	<div>
 		{requests.map(request => {
 			return (
@@ -101,6 +101,7 @@ const RequestsList = ({ requests }) => (
 							<Body
 								body={request.Body}
 								contentType={getContentType(request)}
+								expand={expandAll}
 							/>
 						</div>
 					</div>
