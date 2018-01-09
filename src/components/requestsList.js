@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import JSONTree from 'react-json-tree';
 import Code from 'react-code-prettify';
 import moment from 'moment';
-import ReadMore from './readMore';
+import HideText from './hideText';
 
 const List = ({ items }) => {
 	let result = [];
@@ -29,10 +29,7 @@ const Body = ({ body, contentType, expand }) => {
 				shouldExpandNode={(keyName, data, level) => {
 					return expand || false;
 				}}
-				getItemString={(type, data, itemType, itemString) => (
-					<span> // {type}</span>
-				)}
-				valueRenderer={raw => (<ReadMore>{raw}</ReadMore>)}
+				valueRenderer={raw => <HideText text={raw} maxLength={200} />}
 			/>
 		);
 	}

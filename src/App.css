@@ -6010,3 +6010,8 @@ a.text-dark:focus, a.text-dark:hover {
   .nav-link.active {
     font-weight: bold;
     font-size: 120%; }
+
+.ellipsis {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer; }
