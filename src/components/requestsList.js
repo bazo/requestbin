@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import JSONTree from 'react-json-tree';
 import Code from 'react-code-prettify';
 import moment from 'moment';
+import ReadMore from './readMore';
 
 const List = ({ items }) => {
 	let result = [];
@@ -28,6 +29,10 @@ const Body = ({ body, contentType, expand }) => {
 				shouldExpandNode={(keyName, data, level) => {
 					return expand || false;
 				}}
+				getItemString={(type, data, itemType, itemString) => (
+					<span> // {type}</span>
+				)}
+				valueRenderer={raw => (<ReadMore>{raw}</ReadMore>)}
 			/>
 		);
 	}
@@ -71,10 +76,7 @@ const RequestsList = ({ requests, expandAll }) => (
 					<h6>
 						<strong>{request.Method}</strong>
 						{request.RequestURI} {request.Proto}{' '}
-						<i
-							className="fa fa-file-code-o"
-							aria-hidden="true"
-						/>{' '}
+						<i className="fa fa-file-code-o" aria-hidden="true" />{' '}
 						{request.Header['Content-Type']} FROM{' '}
 						{request.RemoteAddr}{' '}
 						<span className="pull-right">
