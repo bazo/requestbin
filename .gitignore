@@ -25,3 +25,5 @@ vendor
 *.lock
 requestbin.yml
 .realize
+
+vendor.orig

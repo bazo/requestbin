@@ -1,21 +1,21 @@
-import axios from 'axios';
+import axios from "axios";
 
-export const CREATE_BIN = 'CREATE_BIN';
-export const LOAD_BINS = 'LOAD_BINS';
-export const SELECT_BIN = 'LOAD_BIN';
-export const LOAD_REQUESTS = 'LOAD_REQUESTS';
+export const CREATE_BIN = "CREATE_BIN";
+export const LOAD_BINS = "LOAD_BINS";
+export const SELECT_BIN = "LOAD_BIN";
+export const LOAD_REQUESTS = "LOAD_REQUESTS";
 
-export const EXPAND_ALL = 'EXPAND_ALL';
-export const COLLAPSE_ALL = 'COLLAPSE_ALL';
+export const EXPAND_ALL = "EXPAND_ALL";
+export const COLLAPSE_ALL = "COLLAPSE_ALL";
 
-export const SELECT_DATE_FROM = 'SELECT_DATE_FROM';
-export const SELECT_DATE_TO = 'SELECT_DATE_TO';
-export const SET_DATE_RANGE = 'SET_DATE_RANGE';
+export const SELECT_DATE_FROM = "SELECT_DATE_FROM";
+export const SELECT_DATE_TO = "SELECT_DATE_TO";
+export const SET_DATE_RANGE = "SET_DATE_RANGE";
 
-export const SET_MAX_PER_PAGE = 'SET_MAX_PER_PAGE';
+export const SET_MAX_PER_PAGE = "SET_MAX_PER_PAGE";
 
 export function createBin() {
-	const request = axios.post('/api/bins');
+	const request = axios.post("/api/bins");
 
 	return {
 		type: CREATE_BIN,
@@ -24,7 +24,7 @@ export function createBin() {
 }
 
 export function loadBins() {
-	const request = axios.get('/api/bins');
+	const request = axios.get("/api/bins");
 
 	return {
 		type: LOAD_BINS,
@@ -41,7 +41,7 @@ export function selectBin(binId) {
 
 export function loadRequests(binId, page = 1, maxPerPage = 50) {
 	const params = { page, maxPerPage };
-	const request = axios.get(`/api/bins/${binId}/requests`, params);
+	const request = axios.get(`/api/bins/${binId}/requests`, {params});
 
 	return {
 		type: LOAD_REQUESTS,
@@ -86,7 +86,7 @@ export function setDateRange(range) {
 }
 
 export function setDateRangeToday() {
-	const range = 'today';
+	const range = "today";
 	return {
 		type: SET_DATE_RANGE,
 		range
@@ -94,7 +94,7 @@ export function setDateRangeToday() {
 }
 
 export function setDateRangeYesterday() {
-	const range = 'yesterday';
+	const range = "yesterday";
 	return {
 		type: SET_DATE_RANGE,
 		range

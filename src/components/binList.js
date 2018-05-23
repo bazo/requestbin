@@ -1,20 +1,20 @@
-import React from 'react';
+import React from "react";
 
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import { createBin, loadBins, loadRequests } from '../actions';
+import { bindActionCreators } from "redux";
+import { connect } from "react-redux";
+import { createBin, loadBins, loadRequests } from "../actions";
 
 const BinList = ({ createBin, loadBins, bins, loadRequests, selectedBin }) => (
 	<div>
-		<a onClick={createBin}>CREATE BIN</a>
+		<span onClick={createBin} className="btn btn-success">CREATE BIN</span>
 		<br />
 		<br />
-		<a onClick={loadBins}>LOAD BINS</a>
+		<span onClick={loadBins} className="btn btn-light">LOAD BINS</span>
 		<ul className="nav flex-column">
 			{bins.map(bin => {
-				let aClass = 'nav-link';
-				if(selectedBin === bin.HashId) {
-					aClass += ' active';
+				let aClass = "nav-link";
+				if (selectedBin === bin.HashId) {
+					aClass += " active";
 				}
 				return (
 					<li key={bin.ID} className="nav-item">

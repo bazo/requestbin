@@ -1,11 +1,11 @@
-import React from 'react';
+import React from "react";
 
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import JSONTree from 'react-json-tree';
-import Code from 'react-code-prettify';
-import moment from 'moment';
-import HideText from './hideText';
+import { bindActionCreators } from "redux";
+import { connect } from "react-redux";
+import JSONTree from "react-json-tree";
+import Code from "react-code-prettify";
+import moment from "moment";
+import HideText from "./hideText";
 
 const List = ({ items }) => {
 	let result = [];
@@ -21,7 +21,7 @@ const List = ({ items }) => {
 };
 
 const Body = ({ body, contentType, expand }) => {
-	if (contentType === 'application/json') {
+	if (contentType === "application/json") {
 		return (
 			<JSONTree
 				data={JSON.parse(body)}
@@ -41,21 +41,21 @@ const Time = ({ time }) => {
 	const requestTime = moment(time);
 	const now = moment();
 
-	const diff = now.diff(requestTime, 'hours');
+	const diff = now.diff(requestTime, "hours");
 
 	if (diff <= 1) {
 		return requestTime.from(now);
 	} else {
-		return requestTime.format('DD.MM.YYYY HH:MM:SS');
+		return requestTime.format("DD.MM.YYYY HH:MM:SS");
 	}
 };
 
 function getContentType(request) {
-	if (request.Header['Content-Type'] !== undefined) {
-		return request.Header['Content-Type'][0];
+	if (request.Header["Content-Type"] !== undefined) {
+		return request.Header["Content-Type"][0];
 	}
 
-	return 'text/plain';
+	return "text/plain";
 }
 
 const RequestsList = ({ requests, expandAll }) => (
@@ -65,20 +65,19 @@ const RequestsList = ({ requests, expandAll }) => (
 				<div
 					className="jumbotron"
 					key={request.ID}
-					style={{ padding: '2rem 1rem' }}
+					style={{ padding: "2rem 1rem" }}
 					onClick={() => {
+						//this is a feature, not debug info
 						console.log(request);
 					}}
 				>
 					<h6>
 						<strong>{request.Method}</strong>
-						{request.RequestURI} {request.Proto}{' '}
-						<i className="fa fa-file-code-o" aria-hidden="true" />{' '}
-						{request.Header['Content-Type']} FROM{' '}
-						{request.RemoteAddr}{' '}
+						{request.RequestURI} {request.Proto} <i className="fa fa-file-code-o" aria-hidden="true" />{" "}
+						{request.Header["Content-Type"]} FROM {request.RemoteAddr}{" "}
 						<span className="pull-right">
 							<Time time={request.Time} />
-							{'   '}
+							{"   "}
 							<small>{request.ID} </small>
 						</span>
 					</h6>
@@ -86,7 +85,7 @@ const RequestsList = ({ requests, expandAll }) => (
 					<div className="row">
 						<div className="col-lg-6">
 							FORM/POST PARAMETERS:<br />
-							<List items={request.PostForm} />{' '}
+							<List items={request.PostForm} />{" "}
 						</div>
 
 						<div className="col-lg-6">
@@ -97,11 +96,7 @@ const RequestsList = ({ requests, expandAll }) => (
 					<div className="row">
 						<div className="col-lg-12">
 							BODY:
-							<Body
-								body={request.Body}
-								contentType={getContentType(request)}
-								expand={expandAll}
-							/>
+							<Body body={request.Body} contentType={getContentType(request)} expand={expandAll} />
 						</div>
 					</div>
 				</div>

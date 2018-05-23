@@ -10,14 +10,36 @@
 [[projects]]
   branch = "master"
   name = "github.com/GeertJohan/go.rice"
-  packages = [".","embedded"]
+  packages = [
+    ".",
+    "embedded"
+  ]
   revision = "c02ca9a983da5807ddf7d796784928f5be4afd09"
+
+[[projects]]
+  name = "github.com/asdine/storm"
+  packages = [
+    ".",
+    "codec",
+    "codec/json",
+    "index",
+    "internal",
+    "q"
+  ]
+  revision = "bda68dab90fc908ee5dbccb36400edf4f54972d6"
+  version = "v2.1.1"
 
 [[projects]]
   name = "github.com/boltdb/bolt"
   packages = ["."]
   revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
   version = "v1.3.1"
+
+[[projects]]
+  name = "github.com/coreos/bbolt"
+  packages = ["."]
+  revision = "583e8937c61f1af6513608ccc75c97b6abdf4ff9"
+  version = "v1.3.0"
 
 [[projects]]
   branch = "master"
@@ -70,6 +92,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dbdab3dff06cddfce302226407503407af3bb8b6527745cb383e58a4c342cbb1"
+  inputs-digest = "f515e549b1c947d92637874a7a0d104b622096d291fed55d657d76878d1abc6a"
   solver-name = "gps-cdcl"
   solver-version = 1

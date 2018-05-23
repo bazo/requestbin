@@ -9,15 +9,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"sort"
+	"strconv"
+	//"sort"
 	"strings"
 	"time"
 
 	"github.com/GeertJohan/go.rice"
-	"github.com/boltdb/bolt"
+	"github.com/asdine/storm"
+	//"github.com/asdine/storm/q"
+	//"github.com/boltdb/bolt"
+	"github.com/coreos/bbolt"
 	"github.com/jinzhu/configor"
 	"github.com/julienschmidt/httprouter"
 	uuid "github.com/satori/go.uuid"
@@ -57,6 +62,12 @@ type (
 	Bin struct {
 		ID     int
 		HashId string
+	}
+
+	RequestsResponse struct {
+		Page       int64            `json:"page"`
+		PagesCount int64            `json:"pagesCount"`
+		Requests   []*RequestStruct `json:"requests"`
 	}
 )
 
@@ -193,13 +204,23 @@ func loadBinsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	json.NewEncoder(w).Encode(bins)
 }
 
-func loadBinRequestsHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params, db *bolt.DB) {
+func loadBinRequestsHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params, stormDb *storm.DB) {
 
 	binName := params.ByName("binName")
 
+	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
+	limit, err := strconv.ParseInt(r.URL.Query().Get("maxPerPage"), 10, 64)
+
 	requests := make([]*RequestStruct, 0)
 
-	db.View(func(tx *bolt.Tx) error {
+	log.Println(page, limit, err)
+
+	var total int64
+	total = 0
+	var pagesCount int64
+	pagesCount = 1
+
+	stormDb.Bolt.View(func(tx *bolt.Tx) error {
 		// Assume bucket exists and has keys
 		b := tx.Bucket([]byte(binName))
 
@@ -208,20 +229,64 @@ func loadBinRequestsHandler(w http.ResponseWriter, r *http.Request, params httpr
 		}
 
 		b.ForEach(func(k, v []byte) error {
-			req := &RequestStruct{}
-			json.Unmarshal(v, req)
-			requests = append(requests, req)
+			total++
 			return nil
 		})
 
 		return nil
 	})
 
-	sort.SliceStable(requests, func(i, j int) bool {
-		return requests[j].Time.Before(requests[i].Time)
-	})
+	if err == nil {
 
-	json.NewEncoder(w).Encode(requests)
+		skip := (page - 1) * limit
+
+		x := float64(total) / float64(limit)
+
+		pagesCount = int64(math.Ceil(x))
+
+		query := stormDb.Select().Limit(int(limit)).Skip(int(skip)).OrderBy("Time").Reverse()
+		query.Bucket(binName)
+
+		query.RawEach(func(k, v []byte) error {
+			req := &RequestStruct{}
+			json.Unmarshal(v, req)
+			requests = append(requests, req)
+			return nil
+		})
+	}
+	/*
+		db.View(func(tx *bolt.Tx) error {
+			// Assume bucket exists and has keys
+			b := tx.Bucket([]byte(binName))
+
+			if b == nil {
+				return nil
+			}
+
+			b.ForEach(func(k, v []byte) error {
+				req := &RequestStruct{}
+				json.Unmarshal(v, req)
+				requests = append(requests, req)
+				return nil
+			})
+
+			return nil
+		})
+
+		sort.SliceStable(requests, func(i, j int) bool {
+			return requests[j].Time.Before(requests[i].Time)
+		})
+
+
+	*/
+
+	response := RequestsResponse{
+		Page:       page,
+		PagesCount: pagesCount,
+		Requests:   requests,
+	}
+
+	json.NewEncoder(w).Encode(response)
 }
 
 func binMiddleware(handler http.Handler, db *bolt.DB) http.Handler {
@@ -307,11 +372,13 @@ func createBin(db *bolt.DB) (*Bin, error) {
 func main() {
 	loadConfig()
 
-	db, err := bolt.Open(config.DbName, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	stormDb, err := storm.Open(config.DbName, storm.BoltOptions(0600, &bolt.Options{Timeout: 1 * time.Second}))
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer stormDb.Close()
+
+	db := stormDb.Bolt
 
 	db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte("bins"))
@@ -324,6 +391,12 @@ func main() {
 	dbHandler := func(handler func(w http.ResponseWriter, r *http.Request, params httprouter.Params, db *bolt.DB)) func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 			handler(w, r, params, db)
+		}
+	}
+
+	stormHandler := func(handler func(w http.ResponseWriter, r *http.Request, params httprouter.Params, stormDb *storm.DB)) func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+			handler(w, r, params, stormDb)
 		}
 	}
 
@@ -344,7 +417,7 @@ func main() {
 	router.POST("/api/bins", dbHandler(createBinHandler))
 	router.GET("/api/bins", dbHandler(loadBinsHandler))
 
-	router.GET("/api/bins/:binName/requests", dbHandler(loadBinRequestsHandler))
+	router.GET("/api/bins/:binName/requests", stormHandler(loadBinRequestsHandler))
 
 	router.GET("/", fileHandler)
 
