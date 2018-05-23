@@ -29,7 +29,6 @@ const BinList = ({ createBin, loadBins, bins, loadRequests, selectedBin }) => (
 );
 
 const mapStateToProps = ({ bins }, ownProps) => {
-	console.log(bins);
 	return bins;
 };
 
