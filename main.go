@@ -18,11 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GeertJohan/go.rice"
 	"github.com/asdine/storm"
 	//"github.com/asdine/storm/q"
 	//"github.com/boltdb/bolt"
-	"github.com/coreos/bbolt"
+
 	"github.com/jinzhu/configor"
 	"github.com/julienschmidt/httprouter"
 	uuid "github.com/satori/go.uuid"
@@ -374,7 +373,7 @@ func main() {
 
 	stormDb, err := storm.Open(config.DbName, storm.BoltOptions(0600, &bolt.Options{Timeout: 1 * time.Second}))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Opening db: " + err)
 	}
 	defer stormDb.Close()
 
