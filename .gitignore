@@ -22,8 +22,9 @@ yarn-error.log*
 vendor
 
 *.bolt
-*.lock
 requestbin.yml
 .realize
 
 vendor.orig
+rice-box.go
+requestbin

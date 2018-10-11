@@ -37,10 +37,16 @@
 		"start-server": "realize run",
 		"start-fe": "npm-run-all -p watch-css start-js",
 		"start": "npm-run-all -p start-server watch-css start-js",
-		"build": "npm run build-css && react-scripts build && rice embed-go"
+		"build": "yarn build-css && react-scripts build && rice embed-go"
 	},
 	"browserslist": {
-		"development": ["last 2 chrome versions", "last 2 firefox versions"],
-		"production": ["last 2 chrome versions", "last 2 firefox versions"]
+		"development": [
+			"last 2 chrome versions",
+			"last 2 firefox versions"
+		],
+		"production": [
+			"last 2 chrome versions",
+			"last 2 firefox versions"
+		]
 	}
 }

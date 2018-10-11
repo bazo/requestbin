@@ -14,14 +14,12 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	//"sort"
 	"strings"
 	"time"
+
 	"github.com/GeertJohan/go.rice"
-	"github.com/coreos/bbolt"
 	"github.com/asdine/storm"
-	//"github.com/asdine/storm/q"
-	//"github.com/boltdb/bolt"
+	"github.com/coreos/bbolt"
 
 	"github.com/jinzhu/configor"
 	"github.com/julienschmidt/httprouter"
@@ -30,10 +28,10 @@ import (
 )
 
 type (
-	//app config
 	Config struct {
 		Port   string `default:"8100"`
 		DbName string `default:"requestbin.bolt"`
+		Salt   string `default:"WLIXFjh8d3foEoKxqjif"`
 	}
 
 	RequestStruct struct {
@@ -45,7 +43,7 @@ type (
 		ProtoMinor       int    // 0
 		Header           http.Header
 		ContentType      string
-		Body             string //io.ReadCloser
+		Body             string
 		ContentLength    int64
 		TransferEncoding []string
 		Host             string
@@ -81,7 +79,7 @@ func itob(v int) []byte {
 
 func createIdHasher() *hashids.HashID {
 	hd := hashids.NewData()
-	hd.Salt = "WLIXFjh8d3foEoKxqjif"
+	hd.Salt = config.Salt
 	hd.MinLength = 5
 	return hashids.NewWithData(hd)
 }
@@ -111,9 +109,7 @@ func loadConfig() {
 }
 
 func encodeRequest(r *http.Request) ([]byte, error) {
-	//if r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
 	r.ParseForm()
-	//}
 
 	body, _ := ioutil.ReadAll(r.Body)
 
@@ -148,13 +144,13 @@ func encodeRequest(r *http.Request) ([]byte, error) {
 func requestHandler(w http.ResponseWriter, r *http.Request, binName string, db *bolt.DB) {
 	var id uint64
 	err := db.Update(func(tx *bolt.Tx) error {
-		bucketId := []byte(binName)
-		_, err := tx.CreateBucketIfNotExists(bucketId)
+		bucketID := []byte(binName)
+		_, err := tx.CreateBucketIfNotExists(bucketID)
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
 
-		b := tx.Bucket(bucketId)
+		b := tx.Bucket(bucketID)
 
 		id, _ = b.NextSequence()
 
@@ -189,7 +185,6 @@ func loadBinsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	var bins []*Bin
 
 	db.View(func(tx *bolt.Tx) error {
-		// Assume bucket exists and has keys
 		b := tx.Bucket([]byte("bins"))
 
 		b.ForEach(func(k, v []byte) error {
@@ -213,15 +208,12 @@ func loadBinRequestsHandler(w http.ResponseWriter, r *http.Request, params httpr
 
 	requests := make([]*RequestStruct, 0)
 
-	log.Println(page, limit, err)
-
 	var total int64
 	total = 0
 	var pagesCount int64
 	pagesCount = 1
 
 	stormDb.Bolt.View(func(tx *bolt.Tx) error {
-		// Assume bucket exists and has keys
 		b := tx.Bucket([]byte(binName))
 
 		if b == nil {
@@ -237,7 +229,6 @@ func loadBinRequestsHandler(w http.ResponseWriter, r *http.Request, params httpr
 	})
 
 	if err == nil {
-
 		skip := (page - 1) * limit
 
 		x := float64(total) / float64(limit)
@@ -254,31 +245,6 @@ func loadBinRequestsHandler(w http.ResponseWriter, r *http.Request, params httpr
 			return nil
 		})
 	}
-	/*
-		db.View(func(tx *bolt.Tx) error {
-			// Assume bucket exists and has keys
-			b := tx.Bucket([]byte(binName))
-
-			if b == nil {
-				return nil
-			}
-
-			b.ForEach(func(k, v []byte) error {
-				req := &RequestStruct{}
-				json.Unmarshal(v, req)
-				requests = append(requests, req)
-				return nil
-			})
-
-			return nil
-		})
-
-		sort.SliceStable(requests, func(i, j int) bool {
-			return requests[j].Time.Before(requests[i].Time)
-		})
-
-
-	*/
 
 	response := RequestsResponse{
 		Page:       page,
@@ -293,15 +259,9 @@ func binMiddleware(handler http.Handler, db *bolt.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		binName := strings.TrimPrefix(r.URL.Path, "/")
 
-		//binBytes, err := findBin(binName, db)
 		_, err := findBin(binName, db)
 
 		if err == nil {
-			//bin := &Bin{}
-			//json.Unmarshal(binBytes.([]byte), bin)
-			//log.Println(bin)
-			//json.NewEncoder(w).Encode(bin)
-
 			requestHandler(w, r, binName, db)
 		} else {
 			handler.ServeHTTP(w, r)
@@ -344,25 +304,18 @@ func createBin(db *bolt.DB) (*Bin, error) {
 	bin := &Bin{}
 
 	err := db.Update(func(tx *bolt.Tx) error {
-		// Retrieve the users bucket.
-		// This should be created when the DB is first opened.
 		b := tx.Bucket([]byte("bins"))
 
-		// Generate ID for the user.
-		// This returns an error only if the Tx is closed or not writeable.
-		// That can't happen in an Update() call so I ignore the error check.
 		id, _ := b.NextSequence()
 
 		bin.ID = int(id)
 		bin.HashId = hashId(int(id))
 
-		// Marshal user data into bytes.
 		buf, err := json.Marshal(bin)
 		if err != nil {
 			return err
 		}
 
-		// Persist bytes to users bucket.
 		return b.Put(itob(bin.ID), buf)
 	})
 
@@ -374,7 +327,7 @@ func main() {
 
 	stormDb, err := storm.Open(config.DbName, storm.BoltOptions(0600, &bolt.Options{Timeout: 1 * time.Second}))
 	if err != nil {
-		log.Fatal("Opening db: " + err)
+		log.Fatal("Opening db: ", err)
 	}
 	defer stormDb.Close()
 
@@ -412,7 +365,6 @@ func main() {
 	log.Println("starting server on port", config.Port)
 
 	router := httprouter.New()
-	//router.GET("/", http.FileServer(box.HTTPBox()))
 
 	router.POST("/api/bins", dbHandler(createBinHandler))
 	router.GET("/api/bins", dbHandler(loadBinsHandler))
