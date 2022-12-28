@@ -17,9 +17,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GeertJohan/go.rice"
+	rice "github.com/GeertJohan/go.rice"
 	"github.com/asdine/storm"
-	"github.com/coreos/bbolt"
+	bolt "go.etcd.io/bbolt"
 
 	"github.com/jinzhu/configor"
 	"github.com/julienschmidt/httprouter"
@@ -77,7 +77,7 @@ func itob(v int) []byte {
 	return b
 }
 
-func createIdHasher() *hashids.HashID {
+func createIdHasher() (*hashids.HashID, error) {
 	hd := hashids.NewData()
 	hd.Salt = config.Salt
 	hd.MinLength = 5
@@ -85,13 +85,13 @@ func createIdHasher() *hashids.HashID {
 }
 
 func hashId(v int) string {
-	hd := createIdHasher()
+	hd, _ := createIdHasher()
 	id, _ := hd.Encode([]int{v})
 	return id
 }
 
 func decodeHashId(hash string) (int, error) {
-	hd := createIdHasher()
+	hd, _ := createIdHasher()
 	d, err := hd.DecodeWithError(hash)
 	if err != nil {
 		return -1, err
@@ -374,9 +374,10 @@ func main() {
 	router.GET("/", fileHandler)
 
 	router.HandleMethodNotAllowed = false
-	router.NotFound = func(w http.ResponseWriter, r *http.Request) {
-		http.FileServer(box.HTTPBox()).ServeHTTP(w, r)
-	}
+	router.NotFound = http.FileServer(box.HTTPBox())
+	// router.NotFound = func(w http.ResponseWriter, r *http.Request) {
+	// 	http.FileServer(box.HTTPBox()).ServeHTTP(w, r)
+	// }
 
 	log.Fatal(http.ListenAndServe(":"+config.Port, binMiddleware(router, db)))
 }
