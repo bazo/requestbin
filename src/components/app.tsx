@@ -1,47 +1,81 @@
-import React from "react";
+import axios from "axios";
+import { FC, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "react-query";
+import { Bin, RequestsResponse } from "../types";
 
-import LoadingBar from "react-redux-loading-bar";
-import { bindActionCreators } from "redux";
-import { connect } from "react-redux";
-import { loadRequests, expandAll, collapseAll } from "../actions";
 import BinList from "./binList";
 import RequestsList from "./requestsList";
-import Pagination from "./pagination";
 
-const App = ({ selectedBin, loadRequests, expandAll, collapseAll, page, pagesCount }) => (
-	<div className="container-fluid">
-		<nav className="navbar navbar-expand-lg navbar navbar-dark bg-dark">
-			<a className="navbar-brand" href="/">
-				RequestBin
-			</a>
-		</nav>
+const App: FC = () => {
+	const [selectedBin, selectBin] = useState("default");
 
-		<div className="row">
-			<aside className="col-lg-2">
-				<BinList />
-			</aside>
+	const expandAll = () => {};
+	const collapseAll = () => {};
 
-			<div className="col-lg-10" id="top">
-				<LoadingBar style={{ backgroundColor: "#2e6da4" }} showFastActions />
-				<h1>
-					{window.location.origin + "/" + selectedBin}{" "}
+	const queryClient = useQueryClient();
+
+	const loadBins = useQuery<Bin[]>("bins", async (): Promise<Bin[]> => {
+		return (await axios.get<Bin[]>("/api/bins")).data;
+	});
+
+	const createBin = useMutation(() => axios.post("/api/bins"), {
+		onSuccess: () => {
+			queryClient.invalidateQueries("bins");
+		},
+	});
+
+	const loadRequests = useQuery(
+		["bins", selectedBin],
+		async () => {
+			return (await axios.get<RequestsResponse>(`/api/bins/${selectedBin}`))
+				.data;
+		}
+	);
+
+	const bins = loadBins.data || [];
+	const requests = loadRequests.data?.requests || [];
+
+	console.log({ selectedBin, requests });
+	return (
+		<div className="container-fluid">
+			<nav className="navbar navbar-expand-lg navbar navbar-dark bg-dark">
+				<a className="navbar-brand" href="/">
+					RequestBin
+				</a>
+			</nav>
+
+			<div className="row">
+				<aside className="col-lg-2">
+					<BinList
+						bins={bins}
+						onBinSelect={selectBin}
+						onCreateBinClicked={() => createBin.mutate()}
+					/>
+				</aside>
+
+				<div className="col-lg-10" id="top">
+					{/* <LoadingBar style={{ backgroundColor: "#2e6da4" }} showFastActions /> */}
+					<h1>
+						{/* {window.location.origin + "/" + selectedBin}{" "}
 					<i
 						className="fa fa-refresh"
 						aria-hidden="true"
 						onClick={e => {
 							loadRequests(selectedBin);
 						}}
-					/>
-				</h1>
-				<br />
-				<span onClick={expandAll} className="btn btn-primary">
-					Expand all
-				</span>&nbsp;&nbsp;&nbsp;&nbsp;<span onClick={collapseAll} className="btn btn-primary">
-					Collapse all
-				</span>
-				<br />
-				<RequestsList />
-				<Pagination
+					/> */}
+					</h1>
+					<br />
+					<span onClick={expandAll} className="btn btn-primary">
+						Expand all
+					</span>
+					&nbsp;&nbsp;&nbsp;&nbsp;
+					<span onClick={collapseAll} className="btn btn-primary">
+						Collapse all
+					</span>
+					<br />
+					<RequestsList requests={requests} />
+					{/* <Pagination
 					{...{
 						page,
 						pagesCount,
@@ -49,20 +83,13 @@ const App = ({ selectedBin, loadRequests, expandAll, collapseAll, page, pagesCou
 							loadRequests(selectedBin, page);
 						}
 					}}
-				/>
-				<br />
-				<div id="bottom" />
+				/> */}
+					<br />
+					<div id="bottom" />
+				</div>
 			</div>
 		</div>
-	</div>
-);
-
-const mapStateToProps = ({ bins }, ownProps) => {
-	return bins;
+	);
 };
 
-const mapDispatchToProps = dispatch => {
-	return bindActionCreators({ loadRequests, expandAll, collapseAll }, dispatch);
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(App);
+export default App;

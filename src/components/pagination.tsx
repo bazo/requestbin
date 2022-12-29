@@ -23,18 +23,5 @@ const Pagination = ({ page, pagesCount, onChangePage }) => {
 	);
 };
 
-const mapStateToProps = (state, { page, nextPage, previousPage, pagesCount, onChangePage }) => {
-	return {
-		page,
-		nextPage,
-		previousPage,
-		pagesCount,
-		onChangePage
-	};
-};
 
-const mapDispatchToProps = dispatch => {
-	return bindActionCreators({}, dispatch);
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Pagination);
+export default Pagination;
