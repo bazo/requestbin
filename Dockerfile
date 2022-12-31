@@ -1,9 +1,7 @@
 FROM golang:alpine AS builder
 
 RUN apk update && apk add --upgrade --no-cache git nodejs-current yarn ca-certificates upx python2 binutils
-RUN go get -u github.com/golang/dep/cmd/dep github.com/GeertJohan/go.rice/rice
-
-VOLUME $GOPATH/pkg/dep
+RUN go get -u github.com/GeertJohan/go.rice/rice
 
 ARG APP_NAME="requestbin"
 ARG SRC=.

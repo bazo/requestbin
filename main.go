@@ -35,11 +35,13 @@ func main() {
 		log.Fatal("Opening db: ", err)
 	}
 
-	box := rice.MustFindBox("build")
+	box := rice.MustFindBox("dist")
 
 	inspectAppPath := "/app"
 	api := api.NewApi(storage)
-	fileServer := http.StripPrefix(inspectAppPath, http.FileServer(box.HTTPBox()))
+
+	httpBox := box.HTTPBox()
+	fileServer := http.FileServer(httpBox)
 	log.Println(fileServer)
 
 	router := bunrouter.New(
@@ -47,6 +49,17 @@ func main() {
 			reqlog.FromEnv("BUNDEBUG"),
 		)),
 	).Compat()
+
+	router.GET("/assets/*path", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("assets requested")
+		log.Println(r.URL.Path)
+
+		http.StripPrefix("/", fileServer).ServeHTTP(w, r)
+	})
+
+	router.GET(inspectAppPath, func(w http.ResponseWriter, r *http.Request) {
+		http.StripPrefix(inspectAppPath, fileServer).ServeHTTP(w, r)
+	})
 
 	router.GET("/", api.DefaultRequestHandler)
 	router.POST("/", api.DefaultRequestHandler)
@@ -62,8 +75,6 @@ func main() {
 		g.POST("/bins", api.CreateBinHandler)
 
 	})
-
-	//http.Handle(inspectAppPath, fileServer)
 
 	log.Println("starting server on port", config.Port)
 	log.Fatal(http.ListenAndServe(":"+config.Port, router))

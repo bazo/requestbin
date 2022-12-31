@@ -1,0 +1,49 @@
+{
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"nursery": {
+				"recommended": true
+			},
+			"complexity": {
+				"recommended": true
+			},
+			"correctness": {
+				"recommended": true
+			},
+			"security": {
+				"recommended": true,
+				"noDangerouslySetInnerHtml": "warn"
+			},
+			"a11y": {
+				"recommended": false,
+				"useKeyWithClickEvents": "off"
+			},
+			"style": {
+				"recommended": true,
+				"noImplicitBoolean": "off"
+			}
+		},
+		"ignore": [
+			"*.js",
+			".yarn",
+			".husky",
+			"pnp",
+			"./apps/admin/dist",
+			"node_modules"
+		]
+	},
+	"formatter": {
+		"indentSize": 4,
+		"lineWidth": 100,
+		"ignore": [
+			"*.js",
+			".yarn",
+			".husky",
+			"pnp",
+			"./apps/admin/dist",
+			"node_modules"
+		]
+	}
+}

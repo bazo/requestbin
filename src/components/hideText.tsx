@@ -1,45 +1,37 @@
-import React, { Component } from 'react';
+import { FC, useState } from "react";
 
-export default class HideText extends Component {
-	constructor(...args) {
-		super(...args);
+interface HideTextProps {
+	text: string;
+	maxLength: number;
+}
+const HideText: FC<HideTextProps> = ({ text, maxLength }) => {
+	const [isExpanded, setIsExpanded] = useState(false);
 
-		this.state = {
-			expanded: false
-		};
-	}
-
-	toggleExpand = event => {
-		event.preventDefault();
-
-		this.setState({
-			expanded: !this.state.expanded
-		});
+	const toggleExpand = () => {
+		setIsExpanded(!isExpanded);
 	};
 
-	render() {
-		let text = this.props.text;
-		const isTextLonger = this.props.text.length > this.props.maxLength;
-		if (isTextLonger) {
-			if (!this.state.expanded) {
-				text = text.substring(0, this.props.maxLength);
-			}
+	const isTextLonger = text.length > maxLength;
+	if (isTextLonger) {
+		if (!isExpanded) {
+			text = text.substring(0, maxLength);
 		}
+	}
 
-		let result = [<span key="text">{text}</span>];
-
-		if (isTextLonger) {
-			result.push(
+	return (
+		<>
+			<span key="text">{text}</span>
+			{isTextLonger && (
 				<span
 					key="ellipsis"
 					className="ellipsis"
-					onClick={this.toggleExpand}
+					onClick={toggleExpand}
 				>
 					...
 				</span>
-			);
-		}
+			)}
+		</>
+	);
+};
 
-		return result;
-	}
-}
+export default HideText;

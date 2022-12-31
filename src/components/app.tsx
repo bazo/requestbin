@@ -1,4 +1,3 @@
-import axios from "axios";
 import { FC, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Bin, RequestsResponse } from "../types";
@@ -8,34 +7,40 @@ import RequestsList from "./requestsList";
 
 const App: FC = () => {
 	const [selectedBin, selectBin] = useState("default");
+	const [allExpanded, setAllExpanded] = useState(false);
 
-	const expandAll = () => {};
-	const collapseAll = () => {};
+	const expandAll = () => {
+		setAllExpanded(true);
+	};
+	const collapseAll = () => {
+		setAllExpanded(false);
+	};
 
 	const queryClient = useQueryClient();
 
 	const loadBins = useQuery<Bin[]>("bins", async (): Promise<Bin[]> => {
-		return (await axios.get<Bin[]>("/api/bins")).data;
+		return (await fetch("/api/bins")).json();
 	});
 
-	const createBin = useMutation(() => axios.post("/api/bins"), {
-		onSuccess: () => {
-			queryClient.invalidateQueries("bins");
-		},
-	});
-
-	const loadRequests = useQuery(
-		["bins", selectedBin],
-		async () => {
-			return (await axios.get<RequestsResponse>(`/api/bins/${selectedBin}`))
-				.data;
+	const createBin = useMutation(
+		() =>
+			fetch("/api/bins", {
+				method: "POST",
+			}),
+		{
+			onSuccess: () => {
+				queryClient.invalidateQueries("bins");
+			},
 		}
 	);
+
+	const loadRequests = useQuery<RequestsResponse>(["bins", selectedBin], async () => {
+		return (await fetch(`/api/bins/${selectedBin}`)).json();
+	});
 
 	const bins = loadBins.data || [];
 	const requests = loadRequests.data?.requests || [];
 
-	console.log({ selectedBin, requests });
 	return (
 		<div className="container-fluid">
 			<nav className="navbar navbar-expand-lg navbar navbar-dark bg-dark">
@@ -74,7 +79,7 @@ const App: FC = () => {
 						Collapse all
 					</span>
 					<br />
-					<RequestsList requests={requests} />
+					<RequestsList requests={requests} expand={allExpanded} />
 					{/* <Pagination
 					{...{
 						page,

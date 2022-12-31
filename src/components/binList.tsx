@@ -3,19 +3,16 @@ import { Bin } from "../types";
 
 interface BinListProps {
 	bins: Bin[];
-	onBinSelect: (hashId: string) => void
-	onCreateBinClicked: () => void
+	onBinSelect: (hashId: string) => void;
+	onCreateBinClicked: () => void;
 }
 
-const BinList: FC<BinListProps> = ({bins, onBinSelect, onCreateBinClicked}) => {
+const BinList: FC<BinListProps> = ({ bins, onBinSelect, onCreateBinClicked }) => {
 	const selectedBin = "";
 
 	return (
 		<div>
-			<span
-				onClick={onCreateBinClicked}
-				className="btn btn-success"
-			>
+			<span onClick={onCreateBinClicked} className="btn btn-success">
 				CREATE BIN
 			</span>
 			<br />
@@ -28,10 +25,7 @@ const BinList: FC<BinListProps> = ({bins, onBinSelect, onCreateBinClicked}) => {
 					}
 					return (
 						<li key={bin.ID} className="nav-item">
-							<span
-								onClick={() => onBinSelect(bin.ID)}
-								className={aClass}
-							>
+							<span onClick={() => onBinSelect(bin.ID)} className={aClass}>
 								{bin.ID}
 							</span>
 						</li>
