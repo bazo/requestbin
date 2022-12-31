@@ -2,12 +2,19 @@ import { FC } from "react";
 import ReactPaginate from "react-paginate";
 
 interface PaginationProps {
-	page: number
-	pagesCount: number
-	onChangePage: (page: number) => void
+	page: number;
+	pagesCount: number;
+	onChangePage: (page: number) => void;
 }
 
-const Pagination: FC<PaginationProps> = ({ page, pagesCount, onChangePage }) => {
+const Pagination: FC<PaginationProps> = ({
+	page,
+	pagesCount,
+	onChangePage,
+}) => {
+	if (pagesCount < 2) {
+		return null;
+	}
 	return (
 		<ReactPaginate
 			previousLabel={"previous"}
@@ -18,7 +25,6 @@ const Pagination: FC<PaginationProps> = ({ page, pagesCount, onChangePage }) => 
 			forcePage={page - 1}
 			onPageChange={({ selected }) => onChangePage(selected + 1)}
 			containerClassName={"pagination"}
-			//subContainerClassName={"pages pagination"}
 			pageClassName={"page-item"}
 			pageLinkClassName={"page-link"}
 			activeClassName={"active"}

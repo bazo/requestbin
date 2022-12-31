@@ -3,11 +3,13 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Bin, RequestsResponse } from "../types";
 
 import BinList from "./binList";
+import Pagination from "./pagination";
 import RequestsList from "./requestsList";
 
 const App: FC = () => {
 	const [selectedBin, selectBin] = useState("default");
 	const [allExpanded, setAllExpanded] = useState(false);
+	const [page, setPage] = useState(1);
 
 	const expandAll = () => {
 		setAllExpanded(true);
@@ -34,9 +36,14 @@ const App: FC = () => {
 		}
 	);
 
-	const loadRequests = useQuery<RequestsResponse>(["bins", selectedBin], async () => {
-		return (await fetch(`/api/bins/${selectedBin}`)).json();
-	});
+	const loadRequests = useQuery<RequestsResponse>(
+		["bins", selectedBin, page],
+		async () => {
+			return (
+				await fetch(`/api/bins/${selectedBin}?page=${page}`)
+			).json();
+		}
+	);
 
 	const bins = loadBins.data || [];
 	const requests = loadRequests.data?.requests || [];
@@ -80,15 +87,15 @@ const App: FC = () => {
 					</span>
 					<br />
 					<RequestsList requests={requests} expand={allExpanded} />
-					{/* <Pagination
-					{...{
-						page,
-						pagesCount,
-						onChangePage: page => {
-							loadRequests(selectedBin, page);
-						}
-					}}
-				/> */}
+					<Pagination
+						{...{
+							page: loadRequests.data?.page || 1,
+							pagesCount: loadRequests.data?.pagesCount || 1,
+							onChangePage: (page: number) => {
+								setPage(page);
+							},
+						}}
+					/>
 					<br />
 					<div id="bottom" />
 				</div>

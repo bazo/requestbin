@@ -12,17 +12,7 @@ import (
 	"github.com/uptrace/bunrouter"
 )
 
-// func dbHandler(handler func(w http.ResponseWriter, r *http.Request, params httprouter.Params, db *bolt.DB)) func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-// 	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-// 		handler(w, r, params, db)
-// 	}
-// }
-
-// func stormHandler(handler func(w http.ResponseWriter, r *http.Request, params httprouter.Params, stormDb *storm.DB)) func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-// 	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-// 		handler(w, r, params, stormDb)
-// 	}
-// }
+const PAGE_LIMIT = 10
 
 func (api *Api) RequestHandler(w http.ResponseWriter, r *http.Request, binName string) {
 	data, err := api.storage.SaveRequest(binName, r)
@@ -98,10 +88,10 @@ func (api *Api) LoadBinRequestsHandler(w http.ResponseWriter, r *http.Request) {
 	limit, err := strconv.ParseInt(r.URL.Query().Get("maxPerPage"), 10, 64)
 
 	if err != nil {
-		limit = 50
+		limit = PAGE_LIMIT
 	} else {
 		if limit < 0 {
-			limit = 50
+			limit = PAGE_LIMIT
 		}
 	}
 
