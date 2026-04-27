@@ -54,18 +54,22 @@ export function App() {
 				<div className="lg:w-5/6" id="top">
 					<div className="flex items-center gap-4 mb-4">
 						<BinUrl binId={selectedBin} />
-						<button
-							onClick={expandAll}
-							className="px-3 py-2 bg-cyan-800 hover:bg-cyan-900 dark:bg-cyan-700 dark:hover:bg-cyan-800 text-white text-sm rounded cursor-pointer"
-						>
-							Expand all
-						</button>
-						<button
-							onClick={collapseAll}
-							className="px-3 py-2 bg-cyan-800 hover:bg-cyan-900 dark:bg-cyan-700 dark:hover:bg-cyan-800 text-white text-sm rounded cursor-pointer"
-						>
-							Collapse all
-						</button>
+						{requests.length > 0 ? (
+							<>
+								<button
+									onClick={expandAll}
+									className="px-3 py-2 bg-cyan-800 hover:bg-cyan-900 dark:bg-cyan-700 dark:hover:bg-cyan-800 text-white text-sm rounded cursor-pointer"
+								>
+									Expand all
+								</button>
+								<button
+									onClick={collapseAll}
+									className="px-3 py-2 bg-cyan-800 hover:bg-cyan-900 dark:bg-cyan-700 dark:hover:bg-cyan-800 text-white text-sm rounded cursor-pointer"
+								>
+									Collapse all
+								</button>
+							</>
+						) : null}
 					</div>
 					<RequestsList requests={requests} expand={allExpanded} />
 					<Pagination
