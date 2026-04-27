@@ -58,6 +58,12 @@ func loadConfig() {
 	}
 }
 
+func serveStatic(fileServer http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fileServer.ServeHTTP(w, r)
+	}
+}
+
 func main() {
 	loadConfig()
 
@@ -87,11 +93,11 @@ func main() {
 	).Compat()
 
 	router.GET("/assets/*path", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("assets requested")
-		log.Println(r.URL.Path)
-
 		http.StripPrefix("/", fileServer).ServeHTTP(w, r)
 	})
+
+	router.GET("/logo.svg", serveStatic(fileServer))
+	router.GET("/favicon.svg", serveStatic(fileServer))
 
 	router.GET(inspectAppPath, func(w http.ResponseWriter, r *http.Request) {
 		http.StripPrefix(inspectAppPath, fileServer).ServeHTTP(w, r)
