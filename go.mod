@@ -3,7 +3,6 @@ module requestbin
 go 1.25.0
 
 require (
-	github.com/GeertJohan/go.rice v1.0.3
 	github.com/asdine/storm v2.1.2+incompatible
 	github.com/joho/godotenv v1.5.1
 	github.com/satori/go.uuid v1.2.0
@@ -17,7 +16,6 @@ require (
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/Sereal/Sereal v0.0.0-20221130110801-16a4f76670cd // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/daaku/go.zipexe v1.0.2 // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect

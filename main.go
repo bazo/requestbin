@@ -1,6 +1,8 @@
 package main
 
 import (
+	"embed"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -9,11 +11,13 @@ import (
 	"requestbin/storage"
 	"requestbin/types"
 
-	rice "github.com/GeertJohan/go.rice"
 	"github.com/joho/godotenv"
 	"github.com/uptrace/bunrouter"
 	"github.com/uptrace/bunrouter/extra/reqlog"
 )
+
+//go:embed ui/dist
+var embeddedFiles embed.FS
 
 var config types.Config
 
@@ -66,14 +70,15 @@ func main() {
 		log.Fatal("Opening db: ", err)
 	}
 
-	box := rice.MustFindBox("ui/dist")
+	distFS, err := fs.Sub(embeddedFiles, "ui/dist")
+	if err != nil {
+		log.Fatal("Embedding ui/dist: ", err)
+	}
 
 	inspectAppPath := "/app"
 	api := api.NewApi(storage)
 
-	httpBox := box.HTTPBox()
-	fileServer := http.FileServer(httpBox)
-	log.Println(fileServer)
+	fileServer := http.FileServer(http.FS(distFS))
 
 	router := bunrouter.New(
 		bunrouter.Use(reqlog.NewMiddleware(

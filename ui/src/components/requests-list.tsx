@@ -1,7 +1,7 @@
 import { JSONTree } from "react-json-tree";
 import Code from "./code";
 import moment from "moment";
-import { HideText } from "./hideText";
+import { HideText } from "./hide-text";
 import type { Request } from "../types";
 
 function List({ items }: { items: Record<string, string | string[]> }) {

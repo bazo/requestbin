@@ -24,7 +24,7 @@ export function HideText({ text, maxLength }: HideTextProps) {
 			{isTextLonger && (
 				<span
 					key="ellipsis"
-					className="text-indigo-500 cursor-pointer hover:underline"
+					className="text-cyan-500 cursor-pointer hover:underline"
 					onClick={toggleExpand}
 				>
 					...
