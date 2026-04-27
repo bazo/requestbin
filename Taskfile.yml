@@ -36,8 +36,3 @@ tasks:
         sh: git rev-parse --short HEAD
     cmds:
       - docker buildx build --platform linux/amd64,linux/arm64 -t bazo/requestbin:latest -t bazo/requestbin:{{.COMMIT}} --push .
-
-  docker:release:
-    cmds:
-      - task docker:build
-      - task docker:push
