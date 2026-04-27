@@ -1,4 +1,4 @@
-import type { Bin } from "../types";
+import type { Bin } from "../schemas";
 
 interface BinListProps {
 	bins: Bin[];

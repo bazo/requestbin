@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BinResponseSchema, BinSchema, RequestsResponseSchema } from "./types";
+import { BinResponseSchema, BinSchema, RequestsResponseSchema } from "./schemas";
 
 export function useLoadBins() {
 	return useQuery({

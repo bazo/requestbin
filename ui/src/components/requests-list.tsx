@@ -1,8 +1,7 @@
-import { JSONTree } from "react-json-tree";
 import Code from "./code";
 import moment from "moment";
-import { HideText } from "./hide-text";
-import type { Request } from "../types";
+import type { Request } from "../schemas";
+import ReactJsonView from '@microlink/react-json-view'
 
 function List({ items }: { items: Record<string, string | string[]> }) {
 	const result = [];
@@ -28,13 +27,12 @@ function Body({
 }) {
 	if (contentType === "application/json") {
 		return (
-			<JSONTree
-				data={JSON.parse(body)}
-				hideRoot={true}
-				shouldExpandNodeInitially={() => expand}
-				valueRenderer={(raw) => (
-					<HideText text={raw as string} maxLength={200} />
-				)}
+			<ReactJsonView
+				src={JSON.parse(body)}
+				collapsed={!expand}
+				collapseStringsAfterLength={200}
+				theme="tomorrow"
+				groupArraysAfterLength={200}
 			/>
 		);
 	}
