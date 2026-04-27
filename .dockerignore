@@ -1,29 +1,14 @@
-# dependencies
-/node_modules
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
 .DS_Store
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-vendor
-
+.env.*.local
 *.bolt
-requestbin.yml
-.realize
-
+*.log
+node_modules
+ui/node_modules
+ui/dist
+tmp
+vendor
 vendor.orig
 rice-box.go
-requestbin
-ui
+requestbin.yml
+.air.toml

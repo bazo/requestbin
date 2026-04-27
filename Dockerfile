@@ -1,35 +1,33 @@
-FROM golang:alpine AS builder
+FROM oven/bun:alpine AS ui-builder
 
-RUN apk update && apk add --upgrade --no-cache git nodejs-current yarn ca-certificates upx python2 binutils
-RUN go get -u github.com/GeertJohan/go.rice/rice
+WORKDIR /app/ui
+COPY ui/package.json ui/bun.lock* ./
+RUN bun install --frozen-lockfile
+COPY ui/ .
+RUN bun run build
 
-ARG APP_NAME="requestbin"
-ARG SRC=.
-ARG DEST=/go/src/${APP_NAME}/
+FROM golang:1.26-alpine AS builder
 
-WORKDIR ${DEST}
+ARG APP_NAME=requestbin
 
-COPY Gopkg.toml Gopkg.lock ./
-RUN dep ensure -vendor-only
+WORKDIR /src
 
-COPY package.json yarn.lock ./
+COPY go.mod go.sum ./
+RUN go mod download
 
-RUN yarn
+COPY . .
+COPY --from=ui-builder /app/ui/dist ./ui/dist
 
-COPY ${SRC} ${DEST}
-RUN yarn build
-
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-w -s" -o ${APP_NAME}  .
-
-RUN strip --strip-unneeded ${APP_NAME}
-RUN upx ${APP_NAME}
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o ${APP_NAME} .
 
 FROM scratch
 
-ARG APP_NAME="requestbin"
-ENV APP_CMD "./${APP_NAME}"
+ENV HOST=0.0.0.0
+ENV PORT=8100
+ENV DB_NAME=requestbin.bolt
+ENV SALT=somerandomsecretsalt
 
-COPY --from=builder /go/src/${APP_NAME}/${APP_NAME} .
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=builder /src/requestbin /requestbin
 
-CMD ${APP_NAME}}
+ENTRYPOINT ["/requestbin"]

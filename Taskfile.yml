@@ -7,7 +7,6 @@ dotenv: [".env", ".env.local"]
 
 tasks:
   default:
-    desc: Print a greeting message
     cmds:
       - task --list-all
 
@@ -21,3 +20,24 @@ tasks:
     dir: ui
     cmds:
       - bun run dev
+
+  docker:build:
+    desc: Build multi-arch Docker image
+    vars:
+      COMMIT:
+        sh: git rev-parse --short HEAD
+    cmds:
+      - docker buildx build --platform linux/amd64,linux/arm64 -t bazo/requestbin:latest -t bazo/requestbin:{{.COMMIT}} .
+
+  docker:push:
+    desc: Build and push multi-arch Docker image to Docker Hub
+    vars:
+      COMMIT:
+        sh: git rev-parse --short HEAD
+    cmds:
+      - docker buildx build --platform linux/amd64,linux/arm64 -t bazo/requestbin:latest -t bazo/requestbin:{{.COMMIT}} --push .
+
+  docker:release:
+    cmds:
+      - task docker:build
+      - task docker:push
