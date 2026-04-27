@@ -1,0 +1,8 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"useTabs": true,
+	"tabWidth": 4,
+	"endOfLine": "lf",
+	"insertFinalNewline": true,
+	"ignorePatterns": ["dist/**", "public/**", "**/*.html"]
+}

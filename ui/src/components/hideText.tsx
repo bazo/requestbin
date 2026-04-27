@@ -1,10 +1,10 @@
-import { FC, useState } from "react";
+import { useState } from "react";
 
 interface HideTextProps {
 	text: string;
 	maxLength: number;
 }
-const HideText: FC<HideTextProps> = ({ text, maxLength }) => {
+export function HideText({ text, maxLength }: HideTextProps) {
 	const [isExpanded, setIsExpanded] = useState(false);
 
 	const toggleExpand = () => {
@@ -24,7 +24,7 @@ const HideText: FC<HideTextProps> = ({ text, maxLength }) => {
 			{isTextLonger && (
 				<span
 					key="ellipsis"
-					className="ellipsis"
+					className="text-indigo-500 cursor-pointer hover:underline"
 					onClick={toggleExpand}
 				>
 					...
@@ -32,6 +32,5 @@ const HideText: FC<HideTextProps> = ({ text, maxLength }) => {
 			)}
 		</>
 	);
-};
+}
 
-export default HideText;

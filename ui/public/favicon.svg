@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bin-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="arrow-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="bg-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg-grad)"/>
+
+  <!-- Bin body - trapezoid shape -->
+  <path d="M128 200 L384 200 L360 420 C358 434 346 444 332 444 L180 444 C166 444 154 434 152 420 Z" fill="url(#bin-grad)" opacity="0.9"/>
+
+  <!-- Bin rim -->
+  <rect x="108" y="180" width="296" height="40" rx="12" fill="#818cf8"/>
+
+  <!-- Horizontal lines on bin (representing captured data) -->
+  <rect x="172" y="260" width="168" height="12" rx="6" fill="#a5b4fc" opacity="0.6"/>
+  <rect x="180" y="296" width="152" height="12" rx="6" fill="#a5b4fc" opacity="0.45"/>
+  <rect x="186" y="332" width="140" height="12" rx="6" fill="#a5b4fc" opacity="0.3"/>
+  <rect x="192" y="368" width="128" height="12" rx="6" fill="#a5b4fc" opacity="0.2"/>
+
+  <!-- Incoming arrow from top -->
+  <path d="M256 52 L256 148" stroke="url(#arrow-grad)" stroke-width="28" stroke-linecap="round"/>
+  <path d="M210 112 L256 158 L302 112" stroke="url(#arrow-grad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Small accent dots representing incoming requests -->
+  <circle cx="170" cy="80" r="10" fill="#22d3ee" opacity="0.4"/>
+  <circle cx="342" cy="96" r="7" fill="#22d3ee" opacity="0.3"/>
+  <circle cx="148" cy="120" r="6" fill="#22d3ee" opacity="0.2"/>
+  <circle cx="364" cy="60" r="8" fill="#22d3ee" opacity="0.25"/>
+</svg>

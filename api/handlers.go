@@ -25,11 +25,18 @@ func (api *Api) RequestHandler(w http.ResponseWriter, r *http.Request, binName s
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("X-Request-Id", data.ID)
 	}
-
 }
 
 func (api *Api) DefaultRequestHandler(w http.ResponseWriter, r *http.Request) {
 	binName := "default"
+
+	params := bunrouter.ParamsFromContext(r.Context())
+	id, ok := params.Map()["id"]
+
+	if ok {
+		binName = id
+	}
+
 	data, err := api.storage.SaveRequest(binName, r)
 
 	if err != nil {
@@ -41,7 +48,6 @@ func (api *Api) DefaultRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Request-Id", data.ID)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(data)
-
 }
 
 func (api *Api) CreateBinHandler(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +68,6 @@ func (api *Api) LoadBinsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(bins)
 	}
-
 }
 
 func (api *Api) LoadBinRequestsHandler(w http.ResponseWriter, r *http.Request) {

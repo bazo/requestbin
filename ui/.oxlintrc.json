@@ -1,0 +1,17 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["react", "typescript", "import"],
+	"categories": {
+		"correctness": "error"
+	},
+	"rules": {
+		"no-children-prop": "off",
+		"no-unused-expressions": "off",
+		"no-this-in-sfc": "off",
+		"no-control-regex": "off",
+		"no-unused-vars": "warn",
+		"no-empty-pattern": "warn",
+		"react-hooks/exhaustive-deps": "warn"
+	},
+	"ignorePatterns": ["**/public/**", "**/*.html"]
+}

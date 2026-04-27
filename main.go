@@ -35,7 +35,7 @@ func main() {
 		log.Fatal("Opening db: ", err)
 	}
 
-	box := rice.MustFindBox("dist")
+	box := rice.MustFindBox("ui/dist")
 
 	inspectAppPath := "/app"
 	api := api.NewApi(storage)
@@ -61,13 +61,13 @@ func main() {
 		http.StripPrefix(inspectAppPath, fileServer).ServeHTTP(w, r)
 	})
 
-	router.GET("/", api.DefaultRequestHandler)
-	router.POST("/", api.DefaultRequestHandler)
-	router.PATCH("/", api.DefaultRequestHandler)
-	router.DELETE("/", api.DefaultRequestHandler)
-	router.HEAD("/", api.DefaultRequestHandler)
-	router.OPTIONS("/", api.DefaultRequestHandler)
-	router.PUT("/", api.DefaultRequestHandler)
+	router.GET("/*id", api.DefaultRequestHandler)
+	router.POST("/*id", api.DefaultRequestHandler)
+	router.PATCH("/*id", api.DefaultRequestHandler)
+	router.DELETE("/*id", api.DefaultRequestHandler)
+	router.HEAD("/*id", api.DefaultRequestHandler)
+	router.OPTIONS("/*id", api.DefaultRequestHandler)
+	router.PUT("/*id", api.DefaultRequestHandler)
 
 	router.WithGroup("/api", func(g *bunrouter.CompatGroup) {
 		g.GET("/bins/:id", api.LoadBinRequestsHandler)
