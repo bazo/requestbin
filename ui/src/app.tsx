@@ -6,17 +6,29 @@ import { RequestsList } from "./components/requests-list";
 import { ThemeSwitcher } from "./components/theme-switcher";
 import { BinUrl } from "./components/bin-url";
 import { useCreateBin, useLoadBins, useLoadRequests } from "./api";
+import { useSearchParams } from "./search-params";
 
 export function App() {
-	const [selectedBin, selectBin] = useState("default");
+	const { params, setParams } = useSearchParams();
+
+	const selectedBin = params.bin || "default";
+
 	const [allExpanded, setAllExpanded] = useState(false);
-	const [page, setPage] = useState(1);
+	const page = params.page ? parseInt(params.page, 10) : 1;
 
 	const expandAll = () => {
 		setAllExpanded(true);
 	};
 	const collapseAll = () => {
 		setAllExpanded(false);
+	};
+
+	const handleSelectBin = (binId: string) => {
+		setParams({ bin: binId, page: 1 });
+	};
+
+	const handlePageChange = (page: number) => {
+		setParams({ page });
 	};
 
 	const loadBins = useLoadBins();
@@ -26,6 +38,7 @@ export function App() {
 
 	const bins = loadBins.data || [];
 	const requests = loadRequests.data?.requests || [];
+
 
 	return (
 		<div className="w-full">
@@ -46,7 +59,7 @@ export function App() {
 				<aside className="lg:w-1/6">
 					<BinList
 						bins={bins}
-						onBinSelect={selectBin}
+						onBinSelect={handleSelectBin}
 						onCreateBinClicked={createBin.mutate}
 					/>
 				</aside>
@@ -75,7 +88,7 @@ export function App() {
 					<Pagination
 						page={loadRequests.data?.page || 1}
 						pagesCount={loadRequests.data?.pagesCount || 1}
-						onPageChange={setPage}
+						onPageChange={handlePageChange}
 					/>
 				</div>
 			</div>
