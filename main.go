@@ -115,7 +115,6 @@ func main() {
 		g.GET("/bins/:id", api.LoadBinRequestsHandler)
 		g.GET("/bins", api.LoadBinsHandler)
 		g.POST("/bins", api.CreateBinHandler)
-
 	})
 
 	addr := config.Host + ":" + config.Port
