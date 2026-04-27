@@ -1,26 +1,57 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net/http"
+	"os"
 	"requestbin/api"
 	"requestbin/hasher"
 	"requestbin/storage"
 	"requestbin/types"
 
 	rice "github.com/GeertJohan/go.rice"
-
-	"github.com/jinzhu/configor"
+	"github.com/joho/godotenv"
 	"github.com/uptrace/bunrouter"
 	"github.com/uptrace/bunrouter/extra/reqlog"
 )
 
 var config types.Config
 
+func envOrDefault(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
 func loadConfig() {
-	configFile := flag.String("file", "requestbin.yml", "configuration file")
-	configor.Load(&config, *configFile)
+	appEnv := envOrDefault("APP_ENV", "development")
+
+	// Load in priority order: godotenv won't overwrite existing keys,
+	// so higher-priority files must come first.
+	envFiles := []string{
+		".env." + appEnv + ".local",
+		".env.local",
+		".env." + appEnv,
+		".env",
+	}
+
+	var filesToLoad []string
+	for _, f := range envFiles {
+		if _, err := os.Stat(f); err == nil {
+			filesToLoad = append(filesToLoad, f)
+		}
+	}
+	if len(filesToLoad) > 0 {
+		godotenv.Load(filesToLoad...)
+	}
+
+	config = types.Config{
+		Host:   envOrDefault("HOST", "0.0.0.0"),
+		Port:   envOrDefault("PORT", "8100"),
+		DbName: envOrDefault("DB_NAME", "requestbin.bolt"),
+		Salt:   envOrDefault("SALT", "omfgthisissogreat"),
+	}
 }
 
 func main() {
@@ -76,6 +107,7 @@ func main() {
 
 	})
 
-	log.Println("starting server on port", config.Port)
-	log.Fatal(http.ListenAndServe(":"+config.Port, router))
+	addr := config.Host + ":" + config.Port
+	log.Println("starting server on", addr)
+	log.Fatal(http.ListenAndServe(addr, router))
 }

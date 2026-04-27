@@ -10,9 +10,10 @@ import (
 
 type (
 	Config struct {
-		Port   string `default:"8100"`
-		DbName string `default:"requestbin.bolt"`
-		Salt   string `default:"omfgthisissogreat"`
+		Host   string
+		Port   string
+		DbName string
+		Salt   string
 	}
 
 	RequestStruct struct {
